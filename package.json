@@ -1,0 +1,16 @@
+{
+  "name": "context-free-js",
+  "version": "0.1.0",
+  "description": "Context free grammar utilities.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/testgrammar.js"
+  },
+  "keywords": [
+    "CFG",
+    "Context-free",
+    "Grammar"
+  ],
+  "author": "Amber Thrall",
+  "license": "ISC"
+}
