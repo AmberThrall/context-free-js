@@ -5,6 +5,8 @@
   Module for working with context-free grammars.
 </p>
 
+### Example
+
   ```js
   const Grammar = require('context-free-js');
 
