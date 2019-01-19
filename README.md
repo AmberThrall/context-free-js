@@ -8,7 +8,7 @@
 ### Example
 
   ```js
-  const Grammar = require('context-free-js');
+  const CFG = require('context-free-js');
 
   const rules = {
     '<start>': [
@@ -26,7 +26,7 @@
     ]
   };
 
-  const grammar = new Grammar('<start>', rules);
+  const grammar = new CFG.Grammar('<start>', rules);
   grammar.generate();
   ```
 

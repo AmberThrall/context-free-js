@@ -1,18 +1,68 @@
-'use strict';
+var { Grammar } = require('../src/grammar')
+var Test = require('tape');
 
-const Grammar = require('../');
-
-function test1() {
+Test('Matching pairs', function (t) {
   var grammar = new Grammar('S');
-  grammar.addRule('S', 'aSa', 'bSb', '');
-  console.log(grammar);
+  grammar.addRule('S', 'aSb', '');
 
-  for (let i=1; i < 10; i++) {
-    console.log(grammar.generate());
+  var count = 0;
+  for (var i = 0; i < 10; i += 1) {
+    var gen = grammar.generate();
+    if (gen.match(/a*b*/).length === 1) { count += 1; }
+
+    t.equal(i+1, count);
   }
-}
 
-function test2() {
+  t.end();
+});
+
+Test('Well-formed parentheses', function(t) {
+  var grammar = new Grammar('S');
+  grammar.addRule('S', 'SS', '(S)', '()');
+
+  for (var i = 0; i < 10; i += 1) {
+    var gen = grammar.generate();
+    var stack = 0;
+    for (var c of gen) {
+      if (c === '(') { stack += 1; }
+      else if (c === ')') { stack -= 1; }
+      else { stack = -9999; }
+    }
+    t.equal(0, stack);
+  }
+
+  t.end();
+});
+
+Test('Chomsky normal form', function(t) {
+  var grammar1 = new Grammar('S', {
+    'S': [ 'AB', '' ],
+    'A': [ 'a' ],
+    'B': [ 'b' ]
+  });
+  t.equal(true, grammar1.isChomsky());
+
+  var grammar2 = new Grammar('S', {
+    'S': [ 'ASA', 'aB' ],
+    'A': [ 'B', 'S' ],
+    'B': [ 'b', '' ]
+  });
+  t.equal(false, grammar2.isChomsky());
+
+  // Grammar 3 is equivalent to grammar 2 but in CNF.
+  var grammar3 = new Grammar('S0', {
+    'S0': [ 'AX', 'YB', 'a', 'AS', 'SA' ],
+    'S': [ 'AX', 'YB', 'a', 'AS', 'SA' ],
+    'A': [ 'b', 'AX', 'YB', 'a', 'AS', 'SA' ],
+    'B': [ 'b' ],
+    'X': [ 'SA' ],
+    'Y': [ 'a' ]
+  });
+  t.equal(true, grammar3.isChomsky());
+  t.end();
+})
+
+/*function test2() {
   const rules = {
     '<start>': [
       'The <noun> <verb> <adj>.',
@@ -57,12 +107,4 @@ function test3() {
     console.log(grammar.generate());
     console.log();
   }
-}
-
-try {
-  test1();
-  test2();
-  test3();
-} catch(e) {
-  console.log(e);
-}
+}*/

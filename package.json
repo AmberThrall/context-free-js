@@ -2,9 +2,9 @@
   "name": "context-free-js",
   "version": "0.1.0",
   "description": "Context free grammar utilities.",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "node tests/testgrammar.js"
+    "test": "tape \"tests/*.test.js\""
   },
   "keywords": [
     "CFG",
@@ -12,5 +12,8 @@
     "Grammar"
   ],
   "author": "Amber Thrall",
-  "license": "ISC"
+  "license": "MIT",
+  "devDependencies": {
+    "tape": "^4.9.2"
+  }
 }
