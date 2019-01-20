@@ -35,11 +35,10 @@ grammar = new CFG.Grammar('S', {
     "N", "S+S", "S-S", "S*S", "S/S", "(S)"
   ],
   "N": [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
+    "NN", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
   ]
 })
 var parse = CFG.Parser.derive(grammar, "2+3*4");
-var ast = CFG.Parser.Tree.fromChart(parse.chart, "2+3*4"); //CFG.Parser.Tree.AST(parse.derivations[0]);
 //dumpParse(parse, "S", parse.input);
 console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());
 //console.log();

@@ -80,15 +80,18 @@ Tree.prototype.DFS = function(start) {
 Tree.ParseTree = function(sppf) {
   if (!sppf)
     throw new Error("No chart was provided for parse tree.");
-  var root = new Node('root', sppf, sppf.rule.nonterminal, "invtriangle");
+  var root = new Node('root', sppf.sppf[0], sppf.sppf[0].rule.nonterminal);
   var nodeCount = 0;
 
   function _build(root, state, depth) {
     depth = depth || 0;
 
-    var head = new Node('node'+nodeCount, state, state.rule.nonterminal);
-    root.attachNode(head);
-    nodeCount++;
+    var head = root;
+    if (depth > 0) {
+      var head = new Node('node'+nodeCount, state, state.rule.nonterminal);
+      root.attachNode(head);
+      nodeCount++;
+    }
 
     for (var i = 0; i < state.sppf.length; ++i) {
       var next = state.sppf[i];
