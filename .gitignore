@@ -1,5 +1,18 @@
-
+# NPM Garbage files
 node_modules/
 .DS_Store
 .idea
 /*.iml
+package-lock.json
+
+# Graphvis and image files
+*.dot
+*.png
+*.jpeg
+*.svg
+*.ps
+*.bmp
+
+# Includes
+!example.png
+!example.dot

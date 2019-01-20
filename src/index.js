@@ -1,3 +1,4 @@
 module.exports = exports = {
-  Grammar: require('./grammar')
+  Grammar: require('./grammar'),
+  Parser: require('./parser')
 }

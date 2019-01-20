@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Grammar class.
  *
@@ -20,21 +18,21 @@ function Grammar(start = '<start>', rules = {}) {
 /**
  * Adds a set of rules for a given variable.
  *
- * @param {String} variable - Our variable.
+ * @param {String} nonterminal - The nonterminal.
  * @param {[String]} expressions - List of expressions, results in the or operator '|' being used.
  */
-Grammar.prototype.addRule = function(variable, ...exprs) {
+Grammar.prototype.addRule = function(nonterminal, ...exprs) {
   if (exprs.length === 0) {
     throw Error("No expression(s) given to a rule.")
   }
   for (const expr of exprs) {
-    if (!this.rules[variable]) {
-      this.rules[variable] = [];
+    if (!this.rules[nonterminal]) {
+      this.rules[nonterminal] = [];
     }
-    if (this.rules[variable].includes(expr)) {
-      console.warn("A rule was added more than once: "+variable+" -> "+expr)
+    if (this.rules[nonterminal].includes(expr)) {
+      console.warn("A rule was added more than once: "+nonterminal+" -> "+expr)
     }
-    this.rules[variable].push(expr);
+    this.rules[nonterminal].push(expr);
   }
 }
 
@@ -53,6 +51,28 @@ Grammar.prototype.addRules = function(rules) {
       this.addRule(key, rule);
     }
   }
+}
+
+/**
+ * Determines if a given grammar is valid. Namely, no infinite parsing (A -> A is only rule for a nonterminal) or no
+ * path given for a nonterminal.
+ *
+ * @return {Boolean}
+ */
+Grammar.prototype.isValid = function() {
+  for (const key of Object.keys(this.rules)) {
+    // There needs to be at least one rule for nonterminals.
+    if (!this.rules[key] || this.rules[key].length === 0)
+      return false;
+
+    // Check for A->A type rules being the only rule.
+    if (this.rules[key].length === 1) {
+      if (this.rules[key][0].includes(key))
+        return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -94,65 +114,106 @@ Grammar.prototype.isChomsky = function(start, epsilon) {
 }
 
 /**
- * Performs a rule (variable -> rule) to a string.
+ * Determines the grammars alphabet.
  *
- * @param {String} string - Input string
- * @param {String} variable - Variable for the rule
- * @param {String} expressoin - Expression for the rule
- * @return {String}
+ * @return {[String]}
  */
-Grammar.prototype.performRule = function(str, variable, rule) {
-  return str.replace(variable, rule);
+Grammar.prototype.alphabet = function() {
+  var alphabet = [];
+  for (const nonterminal of Object.keys(this.rules)) {
+    for (const production of this.rules[nonterminal]) {
+      var word = "";
+      for (var i = 0; i < production.length; ++i) {
+        var jump = 0;
+
+        // Check if the next one is a nonterminal.
+        for (const candidate of Object.keys(this.rules)) {
+          if (production.substring(i, i+candidate.length) === candidate) {
+
+            word = "";
+            jump = candidate.length;
+            break;
+          }
+        }
+
+        if (jump > 0) {
+          i += jump-1;
+        }
+        else {
+          if (!alphabet.includes(production[i]))
+            alphabet.push(production[i]);
+        }
+      }
+    }
+  }
+
+  return alphabet;
 }
 
 /**
  * Generates a random string using the grammar.
  *
- * @param {String} start - (Optional) Override the grammar's start location.
+ * @param {String} start - (Optional) Override the grammar's starting nonterminal.
  * @return {String}
  */
 Grammar.prototype.generate = function(start) {
+  if (!this.isValid()) {
+    throw new Error('Cannot generate from invalid grammar.')
+  }
+
   const firstRule = start || this.start;
 
   if (firstRule === '' || !this.rules[firstRule]) {
     throw new Error('Cannot generate from grammer, invalid/no start point specified.')
   }
 
-  return _genStep(firstRule, this);
+  var str = firstRule;
+  while (true) {
+    // Find the first variable, left-to-right.
+    let nonterminal;
+    let dist = -1;
+    for (const v of Object.keys(this.rules)) {
+      var idx = str.indexOf(v);
+      if (idx >= 0 && (idx < dist || dist === -1)) {
+        nonterminal = v;
+        dist = idx;
+      }
+    }
+
+    // No more variables found. Generation is done.
+    if (dist === -1)
+      break;
+
+    // Replace the first entry with our randomly chosen rule.
+    var nextRule = getSample(this.rules[nonterminal]);
+    str = str.replace(nonterminal, nextRule);
+  }
+
+  return str;
 }
 
-module.exports = { Grammar: Grammar }
+module.exports = Grammar;
 
 /////////////////////////////////////
-// Private methods
+// Private methods                 //
 /////////////////////////////////////
-var _genStep = function(rule, grammar) {
-  if (!rule) {
-    return rule;
-  }
-
-  let vars = [];
-  for (const v of Object.keys(grammar.rules)) {
-    if (rule.includes(v))
-      vars.push(v);
-  }
-  if (vars.length == 0) {
-    return rule;
-  }
-
-  for (const v of vars) {
-    var nextRule = getSample(grammar.rules[v]);
-    rule = grammar.performRule(rule, v, nextRule);
-  }
-
-  return _genStep(rule, grammar);
+// Robert Jenkin's random function.
+var seed = Math.random()*0x2F6E2B1;
+function random() {
+  seed = ((seed + 0x7ED55D16) + (seed << 12))  & 0xFFFFFFFF;
+  seed = ((seed ^ 0xC761C23C) ^ (seed >>> 19)) & 0xFFFFFFFF;
+  seed = ((seed + 0x165667B1) + (seed << 5))   & 0xFFFFFFFF;
+  seed = ((seed + 0xD3A2646C) ^ (seed << 9))   & 0xFFFFFFFF;
+  seed = ((seed + 0xFD7046C5) + (seed << 3))   & 0xFFFFFFFF;
+  seed = ((seed ^ 0xB55A4F09) ^ (seed >>> 16)) & 0xFFFFFFFF;
+  return (seed & 0xFFFFFFF) / 0x10000000;
 }
 
 // Get a random integer between min and max (including min, excluding max).
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
+  return Math.floor(random() * (max - min)) + min;
 }
 
 // Get a random array element.

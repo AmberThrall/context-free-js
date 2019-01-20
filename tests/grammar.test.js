@@ -1,5 +1,56 @@
-var { Grammar } = require('../src/grammar')
+var Grammar = require('../src/grammar')
 var Test = require('tape');
+
+Test('Invalid grammar', function(t) {
+  var grammar1 = new Grammar('S', {
+    'S': [ 'AB', '' ],
+    'A': [ 'a' ],
+    'B': [ 'B' ]
+  });
+
+  t.equal(false, grammar1.isValid());
+
+  var grammar2 = new Grammar('S', {
+    'S': [ 'AB', '' ],
+    'A': [ 'a' ],
+    'B': [ 'b' ]
+  });
+
+  t.equal(true, grammar2.isValid());
+  t.end();
+});
+
+Test('Alphabet', function (t) {
+  const rules = {
+    '<start>': [
+      'The <noun> <verb> <adj>.',
+      'A <adj> <noun>.'
+    ],
+    '<noun>': [
+      'cat', 'dog', 'boy', 'girl'
+    ],
+    '<adj>': [
+      'big', 'small', 'cute'
+    ],
+    '<verb>': [
+      'is', 'will be'
+    ]
+  };
+
+  var grammar = new Grammar('<start>', rules);
+  var alphabet = grammar.alphabet();
+  var expected = ['T', 'h', 'e', ' ', 'A', '.', 'c', 'a', 't', 'd', 'o', 'g', 'b', 'y', 'i', 'r', 'l', 's', 'm', 'u', 'w'];
+
+  t.equal(expected.length, alphabet.length);
+
+  var good = 0;
+  for (var terminal of expected) {
+    if (alphabet.includes(terminal)) good++;
+  }
+
+  t.equal(expected.length, good);
+  t.end();
+})
 
 Test('Matching pairs', function (t) {
   var grammar = new Grammar('S');

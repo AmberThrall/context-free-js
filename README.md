@@ -7,27 +7,25 @@
 
 ### Example
 
+  <img align="right" width="auto" height="400" src="example.png">
+
   ```js
   const CFG = require('context-free-js');
 
   const rules = {
-    '<start>': [
-      'The <noun> <verb> <adj>.',
-      'A <adj> <noun>.'
+    'S': [
+      "N", "S+S", "S-S", "S*S", "S/S", "(S)"
     ],
-    '<noun>': [
-      'cat', 'dog', 'boy', 'girl'
-    ],
-    '<adj>': [
-      'big', 'small', 'cute'
-    ],
-    '<verb>': [
-      'is', 'will be'
+    "N": [
+      "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
     ]
   };
 
-  const grammar = new CFG.Grammar('<start>', rules);
+  const grammar = new CFG.Grammar('S', rules);
   grammar.generate();
+
+  var parse = CFG.Parser.derive(grammar, "2+3*4");
+  console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDot());
   ```
 
 ### Install
