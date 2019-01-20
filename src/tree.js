@@ -96,6 +96,7 @@ Tree.ParseTree = function(sppf) {
     for (var i = 0; i < state.sppf.length; ++i) {
       var next = state.sppf[i];
       if (typeof next === "string") { // We hit a terminal.
+        if (next === ' ') next = '␣';
         head.attachNode(new Node('node'+nodeCount, state, next, 'oval'));
         nodeCount++;
       }

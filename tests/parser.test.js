@@ -9,12 +9,12 @@ var applyState = function(str, state) {
 function dumpParse(parse, start, string) {
   console.log(string);
   console.log("Number of derivations: "+parse.derivations.length);
-  for (var derivation of parse.derivations) {
+  for (var derivation of parse.sppfs) {
     console.log();
     console.log("Rule\t\tBefore\t\tAfter");
     console.log("========================================")
     var currentString = start;
-    for (var state of derivation) {
+    for (var state of derivation.spdf) {
       if (state === null)
         continue;
       var newString = applyState(currentString, state);
@@ -27,23 +27,46 @@ function dumpParse(parse, start, string) {
 
 var grammar = new CFG.Grammar('S');
 grammar.addRule('S', 'SS', '(S)', '()');
-//dumpParse(CFG.Parser.derive(grammar, "(())"), "S", "(())")
+var parse = CFG.Parser.derive(grammar, "((()))()");
+//console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());
 //console.log();
 
-grammar = new CFG.Grammar('S', {
-  'S': [
-    "N", "S+S", "S-S", "S*S", "S/S", "(S)"
+grammar = new CFG.Grammar('<SENTENCE>', {
+  '<SENTENCE>': [
+    "<NOUN-PHRASE><VERB-PHRASE>"
   ],
-  "N": [
-    "NN", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
-  ]
-})
-var parse = CFG.Parser.derive(grammar, "2+3*4");
-//dumpParse(parse, "S", parse.input);
-console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());
-//console.log();
+  '<NOUN-PHRASE>': [
+    "<CMPLX-NOUN>", "<CMPLX-NOUN><PREP-PHRASE>"
+  ],
+  '<VERB-PHRASE>': [
+    "<CMPLX-VERB>", "<CMPLX-VERB><PREP-PHRASE>"
+  ],
+  '<PREP-PHRASE>': [
+    "<PREP> <CMPLX-NOUN>"
+  ],
+  '<CMPLX-NOUN>': [
+    "<ARTICLE> <NOUN> "
+  ],
+  '<CMPLX-VERB>': [
+    "<VERB> ", "<VERB> <NOUN-PHRASE>"
+  ],
+  '<ARTICLE>': [
+    'a', 'the'
+  ],
+  '<NOUN>': [
+    'boy', 'girl', 'flower'
+  ],
+  '<VERB>': [
+    'touches', 'likes', 'sees'
+  ],
+  '<PREP>': [ 'with' ]
+});
+//parse "the girl with a flower likes a boy with a flower ";
+var parse = CFG.Parser.derive(grammar, "the girl with a flower likes a boy with a flower ");
+//dumpParse(parse, "<start>", parse.input);
+//console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());
 
-const rules = {
+grammar = new CFG.Grammar('<start>', {
   '<start>': [
     'The <noun> <verb> <adj>.',
     'A <adj> <noun>.'
@@ -57,8 +80,23 @@ const rules = {
   '<verb>': [
     'is', 'will be'
   ]
-};
-
-grammar = new CFG.Grammar('<start>', rules);
+})
+//parse "the girl with a flower likes a boy with a flower ";
 var parse = CFG.Parser.derive(grammar, "The cat is cute.");
 //dumpParse(parse, "<start>", parse.input);
+//console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());
+//console.log();
+
+const rules = {
+  'S': [
+    "N", "S+S", "S-S", "S*S", "S/S", "(S)"
+  ],
+  "N": [
+    "NN", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
+  ]
+};
+
+grammar = new CFG.Grammar('S', rules);
+var parse = CFG.Parser.derive(grammar, "2*4+7");
+//dumpParse(parse, "<start>", parse.input);
+console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDOT());

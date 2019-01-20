@@ -24,9 +24,15 @@
   const grammar = new CFG.Grammar('S', rules);
   grammar.generate();
 
-  var parse = CFG.Parser.derive(grammar, "2+3*4");
+  var parse = CFG.Parser.derive(grammar, "2*4+7");
   console.log(CFG.Parser.Tree.ParseTree(parse.derivations[0]).toDot());
   ```
+
+#### A more complex example:
+
+Input: ``the girl with a flower likes a boy with a flower``
+
+<img src="example2.png" />
 
 ### Install
 

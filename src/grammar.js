@@ -116,10 +116,18 @@ Grammar.prototype.isChomsky = function(start, epsilon) {
 /**
  * Determines the grammars alphabet.
  *
+ * @param {Boolean} includeSpace - Is space it's own character in the alphabet (default: true)
+ * @param {Boolean} eachCharacter - Whether or not the alphabet should be character wise. (default: false)
  * @return {[String]}
  */
-Grammar.prototype.alphabet = function() {
+Grammar.prototype.alphabet = function(includeSpace, eachCharacter) {
+  var includeSpace = includeSpace !== false;
+  var eachCharacter = eachCharacter !== true;
+
   var alphabet = [];
+  if (includeSpace)
+    alphabet.push(' ');
+
   for (const nonterminal of Object.keys(this.rules)) {
     for (const production of this.rules[nonterminal]) {
       var word = "";
@@ -129,7 +137,8 @@ Grammar.prototype.alphabet = function() {
         // Check if the next one is a nonterminal.
         for (const candidate of Object.keys(this.rules)) {
           if (production.substring(i, i+candidate.length) === candidate) {
-
+            if (word !== "" && !alphabet.includes(word))
+              alphabet.push(word);
             word = "";
             jump = candidate.length;
             break;
@@ -139,11 +148,17 @@ Grammar.prototype.alphabet = function() {
         if (jump > 0) {
           i += jump-1;
         }
+        else if (includeSpace && production[i] === ' ') { // Reset if it's in the alphabet.
+          if (word !== "" && !alphabet.includes(word))
+            alphabet.push(word);
+          word = "";
+        }
         else {
-          if (!alphabet.includes(production[i]))
-            alphabet.push(production[i]);
+          word += production[i];
         }
       }
+      if (word !== "" && !alphabet.includes(word))
+        alphabet.push(word);
     }
   }
 

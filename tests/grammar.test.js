@@ -39,7 +39,8 @@ Test('Alphabet', function (t) {
 
   var grammar = new Grammar('<start>', rules);
   var alphabet = grammar.alphabet();
-  var expected = ['T', 'h', 'e', ' ', 'A', '.', 'c', 'a', 't', 'd', 'o', 'g', 'b', 'y', 'i', 'r', 'l', 's', 'm', 'u', 'w'];
+  //var expected = ['T', 'h', 'e', ' ', 'A', '.', 'c', 'a', 't', 'd', 'o', 'g', 'b', 'y', 'i', 'r', 'l', 's', 'm', 'u', 'w']
+  var expected = ['The', ' ', 'A', '.', 'cat', 'dog', 'boy', 'girl', 'big', 'small', 'cute', 'is', 'will', 'be'];
 
   t.equal(expected.length, alphabet.length);
 
