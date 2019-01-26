@@ -16,6 +16,8 @@ function explodeExpressions(rhs) {
       exprs.push(parseExpression(cur.trim()));
       cur = "";
     }
+    else if (c === ';' && quote === '') // Begin a comment
+      break;
     else {
       cur += c;
     }
@@ -59,7 +61,6 @@ function parseExpression(expr) {
   if (cur.replace(/\s+/,'') !== '')
     ret.push(cur.trim());
 
-  console.log(ret);
   return ret;
 }
 
