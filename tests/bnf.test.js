@@ -2,23 +2,14 @@ var CFG = require('../src/')
 const util = require('util')
 
 try {
-  var simple = new CFG.Grammar('<syntax>',
+  var grammar = new CFG.Grammar('<syntax>',
   `
-  <postal-address> ::= <name-part> <street-address> <zip-part>
-
-  <name-part> ::= <personal-part> <last-name> <opt-suffix-part> <EOL> | <personal-part> <name-part>
-
-  <personal-part> ::= <initial> "." | <first-name>
-
-  <street-address> ::= <house-num> <street-name> <opt-apt-num> <EOL>
-
-  <zip-part> ::= <town-name> "," <state-code> <ZIP-code> <EOL>
-
-  <opt-suffix-part> ::= "Sr." | "Jr." | <roman-numeral> | ""
-  <opt-apt-num> ::= <apt-num> | ""
+  <syntax> ::= <number> | <syntax> "+" <syntax> | <syntax> "*" <syntax> | <syntax> "/" <syntax> | "(" <syntax> ")"
+  <number> ::= <number><number> | <digit>
   `)
 
-  console.log(util.inspect(simple.rules, false, null, true));
+  var parse = CFG.Parser.derive(grammar, "2*4+7");
+  console.log(parse.derivations[0].toDOT());
 } catch(e) {
   console.log(e);
 }

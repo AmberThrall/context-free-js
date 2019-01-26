@@ -16,9 +16,6 @@ function parseSyntax(root) {
         rules[rule.nonterminal].push(str);
       }
     }
-    if (child.label === "{syntax}") {
-      rules.push(parseSyntax(child));
-    }
   }
 
   return rules;
@@ -46,7 +43,7 @@ function parseRule(rule) {
       if (!onExpression)
         throw Error("Expected an rule name.")
 
-      expressions = parseExpression(child);
+      expressions = expressions.concat(parseExpression(child));
     }
   }
 
@@ -98,7 +95,8 @@ function parseExpression(root) {
       expressions.push(parseList(child));
     }
     else if (child.label === '{expression}') {
-      expressions.push([].concat.apply([], parseExpression(child)));
+      var newExp = parseExpression(child);
+      expressions = expressions.concat(newExp);
     }
   }
 
@@ -110,7 +108,7 @@ function parseList(root) {
 
   for (child of root.nodes) {
     if (child.label === '{list}') {
-      terms.push(parseList(child));
+      terms = terms.concat(parseList(child));
     }
     else if (child.label === '{term}') {
       for (grandchild of child.nodes) {
@@ -124,7 +122,7 @@ function parseList(root) {
     }
   }
 
-  return [].concat.apply([],terms);
+  return terms;
 }
 
 function parseLiteral(root) {

@@ -31,8 +31,6 @@ function Grammar(start = '<start>', rules = {}) {
       }*/
 
       newLines.push(line+"\n");
-
-      console.log(line);
     }
 
     for (var i = 0; i < newLines.length; ++i) {
