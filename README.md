@@ -7,7 +7,7 @@
 
 ### Example
 
-  <img align="right" width="auto" height="300" src="example.png">
+  <img align="right" width="auto" height="325" src="example.png">
 
   ```js
   const CFG = require('context-free-js');
