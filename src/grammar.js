@@ -1,5 +1,4 @@
-/**
- * Grammar class.
+/* Grammar class.
  *
  * @constructor
  * @param {String} start - Initial starting variable.
@@ -10,8 +9,48 @@ function Grammar(start = '<start>', rules = {}) {
   this.start = start;
   this.varRegex = /(\[<\()*(\w+)(\]>\))*/g;
 
-  if (rules !== {}) {
-    this.addRules(rules);
+  if (typeof rules === "string") {
+    var BNF = require('./bnf');
+    this.addRules(BNF.predefinedRules);
+
+    var newLines = [];
+    var lines = rules.split('\n');
+    for (var i = 0; i < lines.length; ++i) {
+      var line = lines[i];
+      var firstChar = line.match(/\S/);
+      if (firstChar === null || firstChar[0] === "\0" || firstChar[0] === "\r" || firstChar[0] === "\n")
+        continue;
+      firstChar = firstChar[0];
+
+      // Comments
+      if (firstChar === ';')
+        continue;
+      // Combine lines split
+      /*for (var j = i+1; j < lines.length; ++j) {
+
+      }*/
+
+      newLines.push(line+"\n");
+
+      console.log(line);
+    }
+
+    for (var i = 0; i < newLines.length; ++i) {
+      try {
+        var line = newLines[i];
+        var parse = BNF.parseLine(line);
+
+        this.addRules(parse);
+      }
+      catch (e) {
+        throw "Line "+(i+1)+": error: "+e.message;
+      }
+    }
+  }
+  else {
+    if (rules !== {}) {
+      this.addRules(rules);
+    }
   }
 }
 

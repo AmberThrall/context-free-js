@@ -16,10 +16,6 @@ function State(nonterminal, production, index, origin, sppf) {
     production: production
   }
 
-  if (!nonterminal || nonterminal === '' || !production || production === '') {
-    throw Error("Received bad state.")
-  }
-
   this.index = index;
   this.origin = origin;
   this.sppf = sppf || [];
@@ -147,6 +143,14 @@ var Parser = {
     var curStr = "";
     for (var i = 0; i < str.length; ++i) {
       if (curStr !== "" && alphabet.includes(curStr)) {
+        var curStr2 = curStr;
+        for (var j = i; j < str.length; ++j) {
+          curStr2 += str[j];
+          if (alphabet.includes(curStr2)) {
+            curStr = curStr2;
+            i = j+1;
+          }
+        }
         words.push(curStr);
         curStr = "";
       }
@@ -279,12 +283,15 @@ var Parser = {
      * Find any paths that succesfully completed.
      */
     var derivations = [];
-    for (var i = 0; i < chart[words.length].length; ++i) {
-      var state = chart[words.length][i];
-      if (state.rule.nonterminal === gamma && state.finished()) {
-        derivations.push(state);
+    //for (var k = 0; k <= words.length; ++k) {
+    var k = words.length;
+      for (var i = 0; i < chart[k].length; ++i) {
+        var state = chart[k][i];
+        if (state.rule.nonterminal === gamma && state.finished()) {
+          derivations.push(Parser.Tree.ParseTree(state));
+        }
       }
-    }
+    //}
 
     return {
       gamma: gamma,
