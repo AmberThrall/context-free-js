@@ -12,12 +12,16 @@
   ```js
   const CFG = require('context-free-js');
 
-  var grammar = new CFG.Grammar('<syntax>',
-  `
-  <syntax> ::= <number> | <syntax> "+" <syntax> | <syntax> "*" <syntax> | <syntax> "/" <syntax> | "(" <syntax> ")"
-  <number> ::= <number><number> | <digit>
-  `)
+  const rules = {
+    'S': [
+      "N", "S+S", "S-S", "S*S", "S/S", "(S)"
+    ],
+    "N": [
+      "NN", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"
+    ]
+  };
 
+  const grammar = new CFG.Grammar('S', rules);
   grammar.generate();
 
   var parse = CFG.Parser.derive(grammar, "2*4+7");
