@@ -34,6 +34,14 @@ Input: ``the girl with a flower likes a boy with a flower``
 
 <img src="example2.png" />
 
+#### Backus-Naur Form predefined rules:
+
+- \<character\>
+- \<letter\>
+- \<digit\>
+- \<symbol\>
+- \<EOL\>
+
 ### Install
 
   ```
