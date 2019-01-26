@@ -1,156 +1,66 @@
 var Grammar = require('./grammar');
 var Parser = require('./parser');
 
-function parseSyntax(root) {
-  var rules = {};
+function explodeExpressions(rhs) {
+  var exprs = [];
 
-  for (child of root.nodes) {
-    if (child.label === "{rule}") {
-      var rule = parseRule(child);
-      if (!rules[rule.nonterminal])
-        rules[rule.nonterminal] = [];
+  // Because of "|", we can't use regex. No states.
+  var cur = "";
+  var quote = '';
+  for (var i = 0; i < rhs.length; ++i) {
+    var c = rhs[i];
 
-      for (var i = 0; i < rule.expressions.length; ++i) {
-        var str = '';
-        for (var j = 0; j < rule.expressions[i].length; ++j) { str += rule.expressions[i][j]; }
-        rules[rule.nonterminal].push(str);
-      }
+    if (c === '|' && quote === '') {
+      if (cur.replace(/\s+/,'') === "")
+        throw "Double '|' encountered.";
+      exprs.push(parseExpression(cur.trim()));
+      cur = "";
+    }
+    else {
+      cur += c;
+    }
+
+    if (c === '"' || c === '\'') {
+      if (quote === '')  { quote = c; }
+      else if (quote === c) { quote = ""; }
     }
   }
+  if (quote !== '')
+    throw "Unterminated quote.";
 
-  return rules;
+  if (cur.replace(/\s+/,'') !== '')
+    exprs.push(parseExpression(cur.trim()));
+
+  return exprs;
 }
 
-function parseRule(rule) {
-  var onExpression = false;
-  var ruleName = "";
-  var expressions = [];
-  for (child of rule.nodes) {
-    if (child.label === "{rule-name}") {
-      if (ruleName !== "")
-        throw Error("Rule has multiple nonterminals.");
-      if (onExpression)
-        throw Error("Expected an expression.")
+function parseExpression(expr) {
+  var ret = [];
 
-      ruleName = parseRuleName(child);
+  var cur = "";
+  var quote = '';
+  for (var i = 0; i < expr.length; ++i) {
+    var c = expr[i];
+    if ((c === ' ' || c === '\t') && quote === '') {
+      if (cur.replace(/\s+/,'') !== "")
+        ret.push(cur.trim());
+      cur = "";
     }
-    else if (child.label === "::=") {
-      if (onExpression)
-        throw Error("Encounted '::=' multiple times.")
-      onExpression = true;
+    else if (c === '"' || c === '\'') {
+      if (quote === '')  { quote = c; }
+      else if (quote === c) { quote = ""; }
     }
-    else if (child.label === '{expression}') {
-      if (!onExpression)
-        throw Error("Expected an rule name.")
-
-      expressions = expressions.concat(parseExpression(child));
-    }
+    else
+      cur += c;
   }
+  if (quote !== '')
+    throw "Unterminated quote in expression.";
 
-  if (ruleName === "")
-    throw Error("Never received a rule name.");
-  if (expressions.length <= 0)
-    throw Error("Rule has no expressions.");
+  if (cur.replace(/\s+/,'') !== '')
+    ret.push(cur.trim());
 
-  return {
-    nonterminal: "<"+ruleName+">",
-    expressions: expressions
-  }
-}
-
-function parseRuleName(root) {
-  var name = "";
-
-  function _rchar(root) {
-    for (child of root.nodes) {
-      if (child.label === '{letter}' || child.label === '{digit}') {
-        var grandchild = child.nodes[0];
-        name += grandchild.label;
-      }
-      else if (child.label === '-')
-        name += child.label;
-    }
-  }
-
-  function _rname(root) {
-    for (child of root.nodes) {
-      if (child.label === '{rule-name}')
-        _rname(child);
-      if (child.label === '{letter}' || child.label === '{digit}')
-        _rchar(root);
-      else if (child.label === '{rule-char}')
-        _rchar(child);
-    }
-  }
-  _rname(root);
-
-  return name;
-}
-
-function parseExpression(root) {
-  var expressions = [];
-
-  for (child of root.nodes) {
-    if (child.label === '{list}') {
-      expressions.push(parseList(child));
-    }
-    else if (child.label === '{expression}') {
-      var newExp = parseExpression(child);
-      expressions = expressions.concat(newExp);
-    }
-  }
-
-  return expressions;
-}
-
-function parseList(root) {
-  var terms = [];
-
-  for (child of root.nodes) {
-    if (child.label === '{list}') {
-      terms = terms.concat(parseList(child));
-    }
-    else if (child.label === '{term}') {
-      for (grandchild of child.nodes) {
-        if (!grandchild)
-          throw Error("Term was preimpetively terminated.");
-        if (grandchild.label === "{rule-name}")
-          terms.push("<"+parseRuleName(grandchild)+">");
-        else if (grandchild.label === "{literal}")
-          terms.push(parseLiteral(grandchild));
-      }
-    }
-  }
-
-  return terms;
-}
-
-function parseLiteral(root) {
-  var literal = "";
-
-  function _rchar(root) {
-    for (child of root.nodes) {
-      if (child.label === '{character}') {
-        var grandchild = child.nodes[0];
-        var greatgrandchild = grandchild.nodes[0];
-        literal += greatgrandchild.label;
-      }
-      else if (child.label === '\"' || child.label === '\'')
-        literal += child.label;
-    }
-  }
-
-  function _rtext(root) {
-    for (child of root.nodes) {
-      if (child.label === '{text1}' || child.label === '{text2}')
-        _rtext(child);
-      else if (child.label === '{character1}' || child.label === '{character2}')
-        _rchar(child);
-    }
-  }
-  _rtext(root);
-
-  return literal;
+  console.log(ret);
+  return ret;
 }
 
 var BNF = {
@@ -199,16 +109,31 @@ var BNF = {
    * @return {{nonterminal, expressions}} - nonterminal -> expressions
    */
   parseLine: function(line) {
-    if (line.slice(-1) !== '\0' && line.slice(-1) !== '\n' && line.slice(-1) !== '\r')
-      line = line+"\0";
+    var productions=[];
+    var sides = line.split(/::=/);
+    if (!sides || sides.length < 2)
+      throw "Expected '::=', but never found it."
+    if (sides.length > 2)
+      throw "The string '::=' was found multiple times."
 
-    var parse = Parser.derive(BNF.grammar, line);
-    if (parse.derivations.length === 0)
-      throw Error("Invalid BNF input. No derivations found.");
-    if (parse.derivations.length > 1)
-      console.warn("BNF input is ambiguous.");
+    var nonterminal = sides[0].trim();
+    if (nonterminal === "" || !nonterminal.match(/\<[\w\d-]+\>/))
+      throw "Bad nonterminal name. Should be of the form '<name>'."
 
-    return parseSyntax(parse.derivations[0].root);
+    var exprs = explodeExpressions(sides[1]);
+    if (exprs.length <= 0)
+      throw "No expressions were found."
+
+    for (var i = 0; i < exprs.length; ++i) {
+      var str = '';
+      for (var j = 0; j < exprs[i].length; ++j) { str += exprs[i][j]; }
+      productions.push(str);
+    }
+
+    var ret = {};
+    ret[nonterminal] = productions;
+
+    return ret;
   }
 }
 
